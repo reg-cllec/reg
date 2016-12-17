@@ -1,0 +1,55 @@
+set default_parallel 100;
+set pig.maxCombinedSplitSize 2147483648;
+
+
+pve1 = LOAD '/data/tracking/PageViewEvent' USING LiAvroStorage('date.range', 'start.date=:start_date_1;end.date=:end_date_1');
+
+pve1 = filter pve1 by header.appName == 'com.linkedin.flagship3.p_android' and mobileHeader.appVersion == ':android_beta_1';
+
+pve2 = LOAD '/data/tracking/PageViewEvent' USING LiAvroStorage('date.range', 'start.date=:start_date_2;end.date=:end_date_2');
+
+pve2 = filter pve2 by header.appName == 'com.linkedin.flagship3.p_android' and mobileHeader.appVersion == ':android_beta_2';
+
+pve3 = LOAD '/data/tracking/PageViewEvent' USING LiAvroStorage('date.range', 'start.date=:start_date_3;end.date=:end_date_3');
+
+pve3 = filter pve3 by header.appName == 'com.linkedin.flagship3.p_android' and mobileHeader.appVersion == ':android_beta_3';
+
+pve = UNION pve1, pve2, pve3;
+
+pve = FOREACH pve GENERATE
+	header.memberId as memberId,
+	mobileHeader.appVersion as appVersion
+;
+
+
+allGroups = LOAD '/data/databases/ANET/ANET_MEMBERS/#LATEST' USING LiAvroStorage();
+
+li_group = FILTER allGroups BY (CREATED_AT IS NOT NULL
+AND CREATED_AT > 0
+AND STATE == 'CNFRMD'
+AND RESIGNED_ON is null
+and MEMBER_ID > 0
+AND ANET_ID == 547033);
+
+non_li_group = JOIN pve by memberId left outer, li_group by MEMBER_ID;
+
+
+
+pve_li = FOREACH non_li_group GENERATE pve::memberId as memberId,  pve::appVersion as appVersion;
+
+
+
+pve_li_grp = FOREACH (GROUP pve_li by appVersion) {
+	unique_memberId = DISTINCT $1.memberId;
+	GENERATE FLATTEN(group) as  appVersion,
+     COUNT(unique_memberId) as uniques;
+};
+
+pve_li_grp = foreach pve_li_grp generate appVersion, uniques;
+
+android_pve = ORDER pve_li_grp BY appVersion DESC ;
+
+DESCRIBE android_pve
+dump android_pve
+
+
