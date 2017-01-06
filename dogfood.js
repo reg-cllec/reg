@@ -10,7 +10,7 @@ loadJSfiles();
 function addWebElements() {
 //shoulder
   $('body').append(
-      '<div id="authorize-div" style="display: none"><span>Authorize access to Google Sheets API</span> <button id="authorize-button" onclick="handleAuthClick(event)"> Authorize </button> </div> <pre id="output"></pre>');
+      '<div id="authorize-div" style="display: none"><span>Authorize access to Google Sheets API</span> <button id="authorize-button" onclick="handleAuthClick(event)"> Authorize </button> </div>');
   $('body > div.content').prepend('<br><br><div id="div_buttons"><button onclick="writeSheet()">Write Sheet</button><br></div><button onclick="readSheet()">Read Sheet</button><br><button onclick="drawCharts()">Draw Chart</button>');
 }
 addWebElements();
