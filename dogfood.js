@@ -89,6 +89,17 @@ function getTables() {
 }
 
 function getiOSJSON() {
+  // reset value
+  ios = {
+    title1:iosTitle1,
+    title2:"XXXXXXXXXX",
+    startDate:"XXXXXXXXXX",
+    endDate:"XXXXXXXXXX",
+    prod:{"appVersion" : "XXXXXXXXXX", "uus" : 0},
+    beta:{"appVersion" : "XXXXXXXXXX", "uus" : 0},
+    versionUUS:[],
+    pageUUS:[]
+  };
   var iV = (reportTables[0].length<10)? 0:1;
   var iP   = 1 - iV;
   ios.startDate = reportTables[iV][1][5];
@@ -128,44 +139,13 @@ function getiOSJSON() {
   sheet.read = false;
   sheet.toCell = "A1";
 }
-
-function getNeptuneJSON() {
-  var iD = (reportTables[0].length<10)? 0:1;
-  var iP   = 1 - iD;
-  neptune.startDate = reportTables[iD][1][0];
-  neptune.endDate = reportTables[iD][reportTables[iD].length-1][0];
-
-  //pop date table
-  var dates = reportTables[iD];
-  for(var i=1;i<dates.length;i++){
-    var uus = parseInt(dates[i][2]);
-    uus =  isNaN(uus)  ? 0: uus;
-    neptune.dateUUS.push([dates[i][0],uus]);
-  }
-
-  //pop pages table
-  var pages = reportTables[iP];
-  for(var j=1;j<pages.length;j++){
-    var uus = parseInt(pages[j][2]);
-    uus =  isNaN(uus)  ? 0: uus;
-    neptune.pageUUS.push([pages[j][0],uus]);
-  }
-
-  //pop title2
-  var dt = neptune.startDate;
-  var start_date = dt.substring(4, 6) + '/' + dt.substring(6, 8) + '/' + dt.substring(0, 4);
-  dt = neptune.endDate;
-  var end_date = dt.substring(4, 6) + '/' + dt.substring(6, 8) + '/' + dt.substring(0, 4);
-  neptune.title2 = neptuneTitle2 + " (" + start_date + " - " + end_date + ")";
-
-  sheet.text = JSON.stringify(neptune);
-  sheet.write = true;
-  sheet.read = false;
-  sheet.toCell = "C1";
-
-}
-
 function getAndroidJSON() {
+  //reset value
+  android = {
+    title1:androidTitle1,
+    versionUUS:[],
+    versionPageUUS:[]
+  };
   var iV = (reportTables[0].length<10)? 0:1;
   var iP   = 1 - iV;
 
@@ -204,6 +184,52 @@ function getAndroidJSON() {
   sheet.read = false;
   sheet.toCell = "B1";
 }
+function getNeptuneJSON() {
+  //reset neptune
+  neptune = {
+    title1:neptuneTitle1,
+    title2:"XXXXXXXXXX",
+    startDate:"XXXXXXXXXX",
+    endDate:"XXXXXXXXXX",
+    pageUUS:[],
+    dateUUS:[]
+  };
+  var iD = (reportTables[0].length<10)? 0:1;
+  var iP   = 1 - iD;
+  neptune.startDate = reportTables[iD][1][0];
+  neptune.endDate = reportTables[iD][reportTables[iD].length-1][0];
+
+  //pop date table
+  var dates = reportTables[iD];
+  for(var i=1;i<dates.length;i++){
+    var uus = parseInt(dates[i][2]);
+    uus =  isNaN(uus)  ? 0: uus;
+    neptune.dateUUS.push([dates[i][0],uus]);
+  }
+
+  //pop pages table
+  var pages = reportTables[iP];
+  for(var j=1;j<pages.length;j++){
+    var uus = parseInt(pages[j][2]);
+    uus =  isNaN(uus)  ? 0: uus;
+    neptune.pageUUS.push([pages[j][0],uus]);
+  }
+
+  //pop title2
+  var dt = neptune.startDate;
+  var start_date = dt.substring(4, 6) + '/' + dt.substring(6, 8) + '/' + dt.substring(0, 4);
+  dt = neptune.endDate;
+  var end_date = dt.substring(4, 6) + '/' + dt.substring(6, 8) + '/' + dt.substring(0, 4);
+  neptune.title2 = neptuneTitle2 + " (" + start_date + " - " + end_date + ")";
+
+  sheet.text = JSON.stringify(neptune);
+  sheet.write = true;
+  sheet.read = false;
+  sheet.toCell = "C1";
+
+}
+
+
 getTables();
 
 
@@ -340,12 +366,16 @@ function readSheet(){
 
 
 function drawCharts() {
+  //<div style="font-size:12.8px"><i style="font-size:12.8px"><span style="color:rgb(153,0,0)"><b><font size="4">IOS:&nbsp;</font></b></span></i><i style="font-size:12.8px"><span style="color:rgb(153,0,0)"><b><font size="4"><font color="#000000"><font size="2"><i>&nbsp;<a href="http://go/viBeta" target="_blank" data-saferedirecturl="https://www.google.com/url?hl=en&amp;q=http://go/viBeta&amp;source=gmail&amp;ust=1483813111180000&amp;usg=AFQjCNF6fM9B6wZPah3CqwDikeLkvmxDSw">http://go/viBeta</a></i></font></font></font></b></span></i><br></div>
+  $('body').append('<div style="font-size:12.8px"><i style="font-size:12.8px"><span style="color:rgb(153,0,0)"><b><font size="4">IOS:&nbsp;</font></b></span></i><i style="font-size:12.8px"><span style="color:rgb(153,0,0)"><b><font size="4"><font color="#000000"><font size="2"><i>&nbsp;<a href="http://go/viBeta" target="_blank" data-saferedirecturl="https://www.google.com/url?hl=en&amp;q=http://go/viBeta&amp;source=gmail&amp;ust=1483813111180000&amp;usg=AFQjCNF6fM9B6wZPah3CqwDikeLkvmxDSw">http://go/viBeta</a></i></font></font></font></b></span></i><br></div>');
   $('body').append('<div id="ios_line" style="width: 900px; height: 500px;"></div>');
   $('body').append('<div id="ios_pie" style="width: 900px; height: 500px;"></div>');
+  $('body').append('<div style="font-size:12.8px"><i style="font-size:large"><span style="color:rgb(153,0,0)"><b>Android:&nbsp;<span style="color:rgb(255,255,255)"><font size="2"><a href="http://go/vaBeta" target="_blank" data-saferedirecturl="https://www.google.com/url?hl=en&amp;q=http://go/vaBeta&amp;source=gmail&amp;ust=1483813111180000&amp;usg=AFQjCNFowO9_2NT6-5dq2m1ERlaVFkhFUQ">http://go/vaBeta</a></font></span></b></span></i><br></div>');
   $('body').append('<div id="android_bar" style="width: 900px; height: 500px;"></div>');
   $('body').append('<div id="android_pie1" style="width: 900px; height: 500px;"></div>');
   $('body').append('<div id="android_pie2" style="width: 900px; height: 500px;"></div>');
   $('body').append('<div id="android_pie3" style="width: 900px; height: 500px;"></div>');
+  $('body').append('<div><font size="4" color="#990000"><b><i><div style="display:inline-block"></div>Neptune</i></b></font></div>');
   $('body').append('<div id="neptune_line" style="width: 900px; height: 500px;"></div>');
   $('body').append('<div id="neptune_pie" style="width: 900px; height: 500px;"></div>');
   google.charts.load('current', {packages: ['corechart', 'line', 'bar']});
