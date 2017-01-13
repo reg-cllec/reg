@@ -26,7 +26,7 @@ var neptuneTitle1 = "Neptune UUs Trend";
 var neptuneTitle2 = "Neptune Dogfooding Usage";
 var androidTitle1 = "Public Android Beta Dogfood Users";
 var androidTitle2 = "Public Android Beta ";
-
+var emailTitle = "Dogfooding adoption weekly report";
 
 var ios = {
   title1:iosTitle1,
@@ -60,8 +60,10 @@ var reportTables =[];
 var sheet ={
   read:false,
   write:false,
-  toCell:"A2",
-  text:""
+  toCell:"A3",
+  text:"",
+  emailTitle:"",
+  values:[]
 };
 
 
@@ -157,7 +159,7 @@ function getAndroidJSON() {
     var ed =  versions[i][3].substring(4, 6) + '/' + versions[i][3].substring(6, 8) + '/' + versions[i][3].substring(0, 4);
     var uus = parseInt(versions[i][1]);
     uus =  isNaN(uus)  ? 0: uus;
-    var t2 = androidTitle2 + vs.toString() + " Usage (" + sd + "/" + ed + ")";
+    var t2 = androidTitle2 + vs.toString() + " Usage (" + sd + " - " + ed + ")";
 
     var oVersion = new AndroidVersion(t2,vs,[]);
 
@@ -196,6 +198,11 @@ function getNeptuneJSON() {
   };
   var iD = (reportTables[0].length<10)? 0:1;
   var iP   = 1 - iD;
+
+  reportTables[iD].sort(function(a, b) {
+    return parseInt(a[0]) - parseFloat(b[0]);
+  });
+
   neptune.startDate = reportTables[iD][1][0];
   neptune.endDate = reportTables[iD][reportTables[iD].length-1][0];
 
@@ -206,6 +213,7 @@ function getNeptuneJSON() {
     uus =  isNaN(uus)  ? 0: uus;
     neptune.dateUUS.push([dates[i][0],uus]);
   }
+
 
   //pop pages table
   var pages = reportTables[iP];
@@ -226,7 +234,7 @@ function getNeptuneJSON() {
   sheet.write = true;
   sheet.read = false;
   sheet.toCell = "C1";
-
+  sheet.emailTitle = emailTitle + " (" + start_date + " - " + end_date + ")";
 }
 
 
@@ -300,7 +308,7 @@ function listMajors() {
       spreadsheetId: '1judnGxTSxOD6l6ImvjWo6r1qxACO0YPEyfe8R7wDXms',
       range: 'latest!'+sheet.toCell,
       valueInputOption: 'USER_ENTERED',
-      values: [ [sheet.text] ]
+      values: sheet.values
     }).then(function(response) {
       console.log(response);
     });
@@ -309,7 +317,7 @@ function listMajors() {
   if(sheet.read == true){
     gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: '1judnGxTSxOD6l6ImvjWo6r1qxACO0YPEyfe8R7wDXms',
-      range: 'latest!A1:C1',
+      range: 'latest!A1:C2',
     }).then(function(response) {
       var range = response.result;
       if (range.values.length > 0) {
@@ -318,6 +326,7 @@ function listMajors() {
         ios = JSON.parse(row[0]);
         android = JSON.parse(row[1]);
         neptune = JSON.parse(row[2]);
+        sheet.emailTitle=range.values[1][2];
 
       } else {
         alert('No data found.');
@@ -342,14 +351,17 @@ function writeSheet(){
     case "beta usage at LI adhoc":
       getiOSJSON();
       sheet.toCell = "A1";
+      sheet.values=[[sheet.text]];
       break;
     case "Test Android beta usage for external users 3in1":
       getAndroidJSON();
       sheet.toCell = "B1";
+      sheet.values=[[sheet.text]];
       break;
     case "Neptune usage by product page key groups":
       getNeptuneJSON();
-      sheet.toCell = "C1";
+      sheet.toCell = "C1:C2";
+      sheet.values=[[sheet.text],[sheet.emailTitle]];
       break;
     default:
       return;
@@ -366,18 +378,21 @@ function readSheet(){
 
 
 function drawCharts() {
-  //<div style="font-size:12.8px"><i style="font-size:12.8px"><span style="color:rgb(153,0,0)"><b><font size="4">IOS:&nbsp;</font></b></span></i><i style="font-size:12.8px"><span style="color:rgb(153,0,0)"><b><font size="4"><font color="#000000"><font size="2"><i>&nbsp;<a href="http://go/viBeta" target="_blank" data-saferedirecturl="https://www.google.com/url?hl=en&amp;q=http://go/viBeta&amp;source=gmail&amp;ust=1483813111180000&amp;usg=AFQjCNF6fM9B6wZPah3CqwDikeLkvmxDSw">http://go/viBeta</a></i></font></font></font></b></span></i><br></div>
-  $('body').append('<div style="font-size:12.8px"><i style="font-size:12.8px"><span style="color:rgb(153,0,0)"><b><font size="4">IOS:&nbsp;</font></b></span></i><i style="font-size:12.8px"><span style="color:rgb(153,0,0)"><b><font size="4"><font color="#000000"><font size="2"><i>&nbsp;<a href="http://go/viBeta" target="_blank" data-saferedirecturl="https://www.google.com/url?hl=en&amp;q=http://go/viBeta&amp;source=gmail&amp;ust=1483813111180000&amp;usg=AFQjCNF6fM9B6wZPah3CqwDikeLkvmxDSw">http://go/viBeta</a></i></font></font></font></b></span></i><br></div>');
-  $('body').append('<div id="ios_line" style="width: 900px; height: 500px;"></div>');
-  $('body').append('<div id="ios_pie" style="width: 900px; height: 500px;"></div>');
+  $('body').append('<pre id="dogfood_title">Dogfooding adoption weekly report</pre>');
+  $('body').append('<br><div style="font-size:12.8px"><div style="font-size:12.8px"><span style="font-size:12.8px"><b>Summary:</b></span></div><div><ul><li style="margin-left:15px"> <br></li></ul></div></div>');
+  $('body').append('<br><div style="font-size:12.8px"><i style="font-size:12.8px"><span style="color:rgb(153,0,0)"><b><font size="4">IOS:&nbsp;</font></b></span></i><i style="font-size:12.8px"><span style="color:rgb(153,0,0)"><b><font size="4"><font color="#000000"><font size="2"><i>&nbsp;<a href="http://go/viBeta" target="_blank" data-saferedirecturl="https://www.google.com/url?hl=en&amp;q=http://go/viBeta&amp;source=gmail&amp;ust=1483813111180000&amp;usg=AFQjCNF6fM9B6wZPah3CqwDikeLkvmxDSw">http://go/viBeta</a></i></font></font></font></b></span></i><br></div>');
+  $('body').append('<div id="ios_line" style="width: 1000px; height: 700px;"></div>');
+  $('body').append('<div id="ios_pie" style="width: 1000px; height: 700px;"></div>');
   $('body').append('<div style="font-size:12.8px"><i style="font-size:large"><span style="color:rgb(153,0,0)"><b>Android:&nbsp;<span style="color:rgb(255,255,255)"><font size="2"><a href="http://go/vaBeta" target="_blank" data-saferedirecturl="https://www.google.com/url?hl=en&amp;q=http://go/vaBeta&amp;source=gmail&amp;ust=1483813111180000&amp;usg=AFQjCNFowO9_2NT6-5dq2m1ERlaVFkhFUQ">http://go/vaBeta</a></font></span></b></span></i><br></div>');
-  $('body').append('<div id="android_bar" style="width: 900px; height: 500px;"></div>');
-  $('body').append('<div id="android_pie1" style="width: 900px; height: 500px;"></div>');
-  $('body').append('<div id="android_pie2" style="width: 900px; height: 500px;"></div>');
-  $('body').append('<div id="android_pie3" style="width: 900px; height: 500px;"></div>');
+  $('body').append('<div id="android_bar" style="width: 1000px; height: 700px;"></div>');
+  $('body').append('<div id="android_pie1" style="width: 1000px; height: 700px;"></div>');
+  $('body').append('<div id="android_pie2" style="width: 1000px; height: 700px;"></div>');
+  $('body').append('<div id="android_pie3" style="width: 1000px; height: 700px;"></div>');
   $('body').append('<div><font size="4" color="#990000"><b><i><div style="display:inline-block"></div>Neptune</i></b></font></div>');
-  $('body').append('<div id="neptune_line" style="width: 900px; height: 500px;"></div>');
-  $('body').append('<div id="neptune_pie" style="width: 900px; height: 500px;"></div>');
+  $('body').append('<div id="neptune_line" style="width: 1000px; height: 700px;"></div>');
+  $('body').append('<div id="neptune_pie" style="width: 1000px; height: 700px;"></div><br>');
+
+  $("#dogfood_title").text(sheet.emailTitle);
   google.charts.load('current', {packages: ['corechart', 'line', 'bar']});
   google.charts.setOnLoadCallback(drawIOSLine);
   google.charts.setOnLoadCallback(drawIOSPie);
@@ -446,7 +461,8 @@ function drawNeptuneLine() {
     title: neptune.title2,
     legend: 'none',
     hAxis: {
-      format: 'M/d/yyyy', gridlines: {count: 15}
+      format: 'M/d/yy',
+      gridlines: {count: 15}
     }
   };
   var chart_div = document.getElementById('neptune_line');
